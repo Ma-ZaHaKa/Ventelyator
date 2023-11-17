@@ -1,0 +1,50 @@
+ #include <LiquidCrystal.h>
+    //источник: http://www.electroschematics.com/9540/arduino-fan-speed-controlled-temperature/
+    LiquidCrystal lcd(7,6,5,4,3,2);
+    int tempPin = A1; // выход LM35
+    int fan = 11; // вывод на вентилятор
+    int led = 8; // вывод на светодиод
+    int temp;
+    int tempMin = 30; // температура начала вращения вентилятора
+    int tempMax = 70; // максимальная температура, когда вентилятор вращается на 100%
+    int fanSpeed;
+    int fanLCD;
+     
+    void setup() {
+    pinMode(fan, OUTPUT);
+    pinMode(led, OUTPUT);
+    pinMode(tempPin, INPUT);
+    lcd.begin(16,2);
+    }
+     
+    void loop() {
+    temp = readTemp(); // получаем температуру
+    if(temp < tempMin) { // если temp меньше минимума
+    fanSpeed = 0; // кулер не вращается
+    digitalWrite(fan, LOW);
+    }
+    if((temp >= tempMin) && (temp <= tempMax)) { // если temp больше минимума
+    fanSpeed = map(temp, tempMin, tempMax, 32, 255); // текущая скорость вентилятора
+    fanLCD = map(temp, tempMin, tempMax, 0, 100); // скорость вращения для отображения на LCD
+    analogWrite(fan, fanSpeed); // вращаем кулер со скоростью fanSpeed
+    }
+    if(temp > tempMax) { // если temp больше максимума
+    digitalWrite(led, HIGH); // включаем светодиод
+    } else { // иначе выключаем светодиод
+    digitalWrite(led, LOW);
+    }
+    lcd.print("TEMP: ");
+    lcd.print(temp); // отображение температуры
+    lcd.print("C ");
+    lcd.setCursor(0,1); // перевод курсора на следующую сторку
+    lcd.print("FANS: ");
+    lcd.print(fanLCD); // отображение скорости вращения вентилятора
+    lcd.print("%");
+    delay(200);
+    lcd.clear();
+    }
+     
+    int readTemp() { // получить температуру и переконвертировать ее в цельсии
+    temp = analogRead(tempPin);
+    return temp * 0.48828125;
+    }

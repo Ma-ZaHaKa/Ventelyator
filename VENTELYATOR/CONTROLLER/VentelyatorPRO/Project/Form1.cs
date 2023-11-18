@@ -111,8 +111,8 @@ namespace Project
 
 
 
-            //for (int i = 0; i < 5; i++) { COM = FindCOMPort(ARDUION_PROJECT); if (COM == "") { System.Threading.Thread.Sleep(1000); } else { break; } }
-            COM = FindCOMPort(ARDUION_PROJECT);
+            for (int i = 0; i < 5; i++) { COM = FindCOMPort(ARDUION_PROJECT); if (COM == "") { System.Threading.Thread.Sleep(1000); } else { break; } }
+            //COM = FindCOMPort(ARDUION_PROJECT);
             if (COM == "") { MessageBox.Show("ERROR! COM NOT FOUND"); this.Close(); }
 
             List<(string, int)> vals = GetVals(COM);

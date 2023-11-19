@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO.Ports;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -31,6 +32,10 @@ namespace Project
                     x.Capture = false; Capture = false; Message m = Message.Create(Handle, 0xA1, new IntPtr(2), IntPtr.Zero); base.WndProc(ref m);
                 };
             });
+
+            //---double buffered panels by diktor
+            new List<Panel> { PanelHead, PanelMain}.ForEach(panel
+               => typeof(Panel).InvokeMember("DoubleBuffered", BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic, null, panel, new object[] { true }));
         }
 
         // Красим форму
@@ -54,6 +59,26 @@ namespace Project
             Invalidate();
         }
 
+        void FormPaint(Color color_shapka, int pixel_shapka, Color color_body)
+        {
+            void OnPaintEventHandler(object s, PaintEventArgs a)
+            {
+                if (ClientRectangle == Rectangle.Empty)
+                    return;
+                float shapka_panel = (float)pixel_shapka / 600; //0.05f; //telegram   //shapka * 600 = count_pixel on screen
+
+                var lgb = new LinearGradientBrush(ClientRectangle, Color.Empty, Color.Empty, 90);
+                var cblend = new ColorBlend { Colors = new[] { color_shapka, color_shapka, color_body, color_body }, Positions = new[] { 0, shapka_panel, shapka_panel, 1 } };
+
+                lgb.InterpolationColors = cblend;
+                a.Graphics.FillRectangle(lgb, ClientRectangle);
+            }
+
+            Paint -= OnPaintEventHandler;
+            Paint += OnPaintEventHandler;
+
+            Invalidate();
+        }
 
 
 
@@ -64,7 +89,7 @@ namespace Project
 
 
         public string COM = "";
-        public string ARDUION_PROJECT = "debug_station";
+        public string ARDUINO_PROJECT = "debug_station";
         async void Form1_Load(object sender, EventArgs e)
         {
             // Плавный запуск формы
@@ -111,7 +136,7 @@ namespace Project
 
 
 
-            for (int i = 0; i < 5; i++) { COM = FindCOMPort(ARDUION_PROJECT); if (COM == "") { System.Threading.Thread.Sleep(1000); } else { break; } }
+            for (int i = 0; i < 5; i++) { COM = FindCOMPort(ARDUINO_PROJECT); if (COM == "") { System.Threading.Thread.Sleep(1000); } else { break; } }
             //COM = FindCOMPort(ARDUION_PROJECT);
             if (COM == "") { MessageBox.Show("ERROR! COM NOT FOUND"); this.Close(); }
 
